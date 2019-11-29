@@ -7,29 +7,46 @@ variables:
   ConnectedServiceName: 'flask pipeline'
   WebAppName: 'zqcflask'
 
+trigger:
+- master
+
 pool:
   vmImage: 'ubuntu-latest'
-strategy:
-  matrix:
-    Python27:
-      python.version: '2.7'
-    Python35:
-      python.version: '3.5'
-    Python36:
-      python.version: '3.6'
-    Python37:
-      python.version: '3.7'
 
 steps:
 - task: UsePythonVersion@0
   inputs:
-    versionSpec: '$(python.version)'
-  displayName: 'Use Python $(python.version)'
+    versionSpec: '3.6'
+    architecture: 'x64'
+  displayName: 'Use Python 3.6'
 
 - script: |
     python -m pip install --upgrade pip
     pip install -r requirements.txt
   displayName: 'Install dependencies'
+
+- task: ArchiveFiles@2
+  inputs:
+    rootFolderOrFile: '$(Build.SourcesDirectory)'
+    includeRootFolder: false
+    archiveType: 'zip'
+    archiveFile: '$(Build.ArtifactStagingDirectory)/Application$(Build.BuildId).zip'
+    replaceExistingArchive: true
+    verbose: # (no value); this input is optional
+    
+- task: AzureRMWebAppDeployment@4
+  displayName: Azure App Service Deploy
+  inputs:
+    appType: webAppLinux
+    RuntimeStack: 'PYTHON|3.6'
+    ConnectedServiceName: $(ConnectedServiceName)
+    WebAppName: $(WebAppName)
+    Package: '$(Build.ArtifactStagingDirectory)/Application$(Build.BuildId).zip'
+
+    # The following parameter is specific to the Flask example code. You may
+    # or may not need a startup command for your app.
+
+    StartupCommand: 'gunicorn --bind=0.0.0.0 --workers=4 startup:app'      
 
 # - script: |
 #     pip install pytest pytest-azurepipelines
