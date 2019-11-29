@@ -4,8 +4,8 @@
 # https://docs.microsoft.com/azure/devops/pipelines/languages/python
 
 variables:
-  ConnectedServiceName: ''
-  WebAppName: '<your-appservice>'
+  ConnectedServiceName: 'flask pipeline'
+  WebAppName: 'zqcflask'
 
 pool:
   vmImage: 'ubuntu-latest'
